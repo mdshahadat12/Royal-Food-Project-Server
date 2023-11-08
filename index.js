@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000;
 
@@ -42,14 +42,30 @@ async function run() {
     })
 
     app.get('/api/v1/allFood', async(req,res)=>{
-      const food = req.body;
-      // console.log(food);
-      const result = await allFoodCollection.find().toArray()
+      const pageNumber = Number(req.query.pageNum);
+      const limit = Number(req.query.limit);
+      const skip = pageNumber*limit
+      // console.log(pageNumber);
+
+      const result = await allFoodCollection.find().skip(skip).limit(limit).toArray()
       res.send(result)
+    })
+
+    app.get('/api/v1/allfood/:id',async(req,res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      const result = await allFoodCollection.findOne(filter)
+      res.send(result)
+    })
+
+    app.get('/api/v1/foodcount',async(req,res)=>{
+      const result = await allFoodCollection.estimatedDocumentCount()
+      res.send({result})
+      console.log(result);
     })
     
     app.get('/api/v1/foodSix', async(req,res)=>{
-      const result = await foodsixCollection.find().toArray()
+      const result = await allFoodCollection.find().sort({count:"desc"}).limit(6).toArray()
       res.send(result)
     })
     
