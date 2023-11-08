@@ -36,7 +36,7 @@ async function run() {
 
     app.post('/api/v1/allFood', async(req,res)=>{
       const food = req.body;
-      console.log(food);
+      // console.log(food);
       const result = await allFoodCollection.insertOne(food)
       res.send(result)
     })
@@ -51,6 +51,17 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/api/v1/addedFood',async(req,res)=>{
+      const email = req.query?.email;
+      let query = {}
+      if(email){
+        query = {madeBy : email}
+      }
+      console.log(query);
+      const result = await allFoodCollection.find(query).toArray()
+      res.send(result)
+    })
+
     app.get('/api/v1/allfood/:id',async(req,res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
@@ -61,7 +72,7 @@ async function run() {
     app.get('/api/v1/foodcount',async(req,res)=>{
       const result = await allFoodCollection.estimatedDocumentCount()
       res.send({result})
-      console.log(result);
+      // console.log(result);
     })
     
     app.get('/api/v1/foodSix', async(req,res)=>{
