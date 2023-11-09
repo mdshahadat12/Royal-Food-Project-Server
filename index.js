@@ -8,13 +8,15 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // middlewere
-app.use(express.json());
-app.use(cookieParser())
+
 
 app.use(cors({
-  origin:['http://localhost:5173','https://royal-food-assignment.netlify.app'],
+  origin:['https://royal-food-assignment.netlify.app','http://localhost:5173'],
   credentials:true
 }));
+
+app.use(express.json());
+app.use(cookieParser())
 
 const secretKey = process.env.SCERET_KEY
 
@@ -65,7 +67,8 @@ async function run() {
       const token = jwt.sign(email,secretKey,{expiresIn:'1h'})
       res.cookie('token',token,{
         httpOnly:true,
-        secure:false,
+        secure: process.env.NODE_ENV === 'production', 
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
       }).send({success:true})
     })
 
@@ -166,7 +169,7 @@ async function run() {
     app.post('/api/v1/user', async (req,res)=>{
       const user = req.body;
       // console.log(user);
-      const result = await userCollection.insertOne(food);
+      const result = await userCollection.insertOne(user);
       res.send(result);
     })
 
