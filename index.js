@@ -109,6 +109,14 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/api/v1/addedFood/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const find = { _id : new ObjectId(id) };
+      const result = await allFoodCollection.deleteOne(find);
+      res.send(result);
+    });
+
     console.log("successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
