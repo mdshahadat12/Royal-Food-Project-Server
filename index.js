@@ -37,6 +37,7 @@ async function run() {
     const allFoodCollection = royaldb.collection("allFood");
     const orderFoodCollection = royaldb.collection("orderedFood");
     const userCollection = royaldb.collection("user");
+    const blogCollection = royaldb.collection("blog");
 
     // JWT
 
@@ -200,6 +201,11 @@ async function run() {
       const result = await allFoodCollection.updateOne(filter,update,options)
       console.log(result);
       res.send(result)
+    })
+
+    app.get('/api/v1/blog',async(req,res)=>{
+      const result = await blogCollection.find().toArray();
+      res.send(result[0]);
     })
 
     console.log("successfully connected to MongoDB!");
