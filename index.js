@@ -1,13 +1,22 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
 // middlewere
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser())
+
+app.use(cors({
+  origin:['http://localhost:5173','https://royal-food-assignment.netlify.app'],
+  credentials:true
+}));
+
+const secretKey = process.env.SCERET_KEY
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_USER}@cluster0.dsq3s3c.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -25,10 +34,40 @@ async function run() {
     const royaldb = client.db("royalFood");
     const allFoodCollection = royaldb.collection("allFood");
     const orderFoodCollection = royaldb.collection("orderedFood");
+    const userCollection = royaldb.collection("user");
 
-    // app.get('/api/v1/allFood',async(req,res)=>{
-    //   res.send("kichu na")
-    // })
+    // JWT
+
+    const middleman = (req,res,next)=>{
+      const {token} = req.cookies;
+      // console.log('man',token);
+      if(!token){
+        return res.status(401).send({message:"not Authrized"})
+      }
+      jwt.verify(token,secretKey,(err,decoded)=>{
+        if(err){
+          return res.status(401).send({message:"not Authrized"})
+        }
+        console.log('decoded',decoded);
+        req.user = decoded
+        next()
+
+      })
+      
+
+
+    }
+
+
+    app.post("/api/v1/jwt", async (req, res) => {
+      const email = req.body;
+      // console.log(email);
+      const token = jwt.sign(email,secretKey,{expiresIn:'1h'})
+      res.cookie('token',token,{
+        httpOnly:true,
+        secure:false,
+      }).send({success:true})
+    })
 
     app.post("/api/v1/allFood", async (req, res) => {
       const food = req.body;
@@ -51,8 +90,12 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/api/v1/addedFood", async (req, res) => {
+    app.get("/api/v1/addedFood",middleman, async (req, res) => {
       const email = req.query?.email;
+      console.log(email,req.user.email);
+      if(email !== req.user.email){
+        return res.send({message:'unauthirised'})
+      }
       let query = {};
       if (email) {
         query = { madeBy: email };
@@ -90,8 +133,11 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/api/v1/cart", async (req, res) => {
+    app.get("/api/v1/cart",middleman, async (req, res) => {
       const email = req.query?.email;
+      if(email !== req.user.email){
+        return res.send({message:'unauthirised'})
+      }
       let query = {};
       if (email) {
         query = { email: email };
@@ -116,6 +162,13 @@ async function run() {
       const result = await allFoodCollection.deleteOne(find);
       res.send(result);
     });
+
+    app.post('/api/v1/user', async (req,res)=>{
+      const user = req.body;
+      // console.log(user);
+      const result = await userCollection.insertOne(food);
+      res.send(result);
+    })
 
     app.put('/api/v1/addedFood/:id', async (req,res)=>{
       const id = req.params.id;
