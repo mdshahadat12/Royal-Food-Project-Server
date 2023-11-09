@@ -72,6 +72,12 @@ async function run() {
       }).send({success:true})
     })
 
+    app.post("/api/v1/logout", async (req, res) => {
+      const user = req.body;
+      res.clearCookie('token',{maxAge:0}).send('token gayeb')
+
+    })
+
     app.post("/api/v1/allFood", async (req, res) => {
       const food = req.body;
       // console.log(food);
