@@ -117,6 +117,29 @@ async function run() {
       res.send(result);
     });
 
+    app.put('/api/v1/addedFood/:id', async (req,res)=>{
+      const id = req.params.id;
+      console.log(id);
+      const formValue = req.body;
+      const filter = {_id: new ObjectId(id)}
+      const options = { upsert: true };
+      const update = {
+        $set: {
+          img:formValue.img,
+          name:formValue.name,
+          category:formValue.category,
+          madeBy:formValue.madeBy,
+          price:formValue.price,
+          quantity:formValue.quantity,
+          description:formValue.description,
+          origin:formValue.origin,
+        },
+      };
+      const result = await allFoodCollection.updateOne(filter,update,options)
+      console.log(result);
+      res.send(result)
+    })
+
     console.log("successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
